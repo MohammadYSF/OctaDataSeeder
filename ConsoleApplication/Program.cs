@@ -1,7 +1,13 @@
 ﻿using Faker;
+using Microsoft.AspNetCore.Identity;
 using Npgsql;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
+class DummyUser
+{
+
+}
 class AuthSeeder
 {
     string connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa_auth";
@@ -45,6 +51,17 @@ class OctaReadDbSeeder
 {
     string read_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa-api_query";
     string write_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa-api";
+    string auth_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa_auth";
+    public void ClearAuthDb()
+    {
+        using var connection = new NpgsqlConnection(auth_connectionString);
+        connection.Open();
+
+        using var command = new NpgsqlCommand("select clear_auth_db()", connection);
+        command.CommandType = System.Data.CommandType.Text;
+        // Execute the function
+        command.ExecuteNonQuery();
+    }
     public void ClearReadDb()
     {
         using var connection = new NpgsqlConnection(read_connectionString);
@@ -58,9 +75,19 @@ class OctaReadDbSeeder
 
     public void Seed()
     {
-        for (int i = 0; i < 1000; i++)
+        var passwordHasher = new PasswordHasher<DummyUser>();
+        Guid roleIdBusinessOwner = Guid.NewGuid();
+        Guid roleIdCustomer = Guid.NewGuid();
+        Guid roleIdWorker = Guid.NewGuid();
+        string roleNameBusinessOwner = "BusinessOwner";
+        string roleNameCustomer = "Customer";
+        string roleNameWokrer = "Worker";
+        Auth_InsertIntoAspNetRole(roleIdBusinessOwner, roleNameBusinessOwner, roleNameBusinessOwner.Normalize(), Guid.NewGuid().ToString());
+        Auth_InsertIntoAspNetRole(roleIdCustomer, roleNameCustomer, roleNameCustomer.Normalize(), Guid.NewGuid().ToString());
+        Auth_InsertIntoAspNetRole(roleIdWorker, roleNameWokrer, roleNameWokrer.Normalize(), Guid.NewGuid().ToString());
+        for (int i = 0; i < 100; i++)
         {
-            Console.WriteLine("i= "+ i);
+            Console.WriteLine("i= " + i);
             {
                 int code = Faker.Number.RandomNumber();
                 var buyDate = Faker.Date.Past().ToUniversalTime();
@@ -109,6 +136,9 @@ class OctaReadDbSeeder
                     Guid id = Guid.NewGuid();
                     string phoneNumber = Faker.Phone.GetPhoneNumber();
                     InsertCustomerRM(id, customerId, customerFirstName, customerLastName, customerCode, phoneNumber);
+                    Guid userId = Guid.NewGuid();
+                    Auth_InsertIntoAspNetUser(userId, customerFirstName, customerLastName, customerCode, customerCode.Normalize(), null, null, true, passwordHasher.HashPassword(null, phoneNumber), Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), phoneNumber, true, false, null, true, 0);
+                    Auth_InsertIntoAspNetUserRole(userId, roleIdCustomer);
                 }
                 {
                     Guid id = Guid.NewGuid();
@@ -150,6 +180,33 @@ class OctaReadDbSeeder
 
 
         }
+    }
+    void Auth_InsertIntoAspNetUserRole(Guid userId, Guid roleId)
+    {
+        using var connection = new NpgsqlConnection(auth_connectionString);
+        connection.Open();
+        using var command = new NpgsqlCommand($"select insert_AspNetUserRole('{userId}','{roleId}')", connection);
+        command.CommandType = System.Data.CommandType.Text;
+        command.ExecuteNonQuery();
+    }
+    void Auth_InsertIntoAspNetRole(Guid id, string name, string normalizedName, string concurrencyStamp)
+    {
+        using var connection = new NpgsqlConnection(auth_connectionString);
+        connection.Open();
+        using var command = new NpgsqlCommand($"select insert_aspnet_role('{id}','{name}','{normalizedName}','{concurrencyStamp}')", connection);
+        command.CommandType = System.Data.CommandType.Text;
+        command.ExecuteNonQuery();
+    }
+    void Auth_InsertIntoAspNetUser(Guid id, string firstName, string lastName, string username, string normalizedUsername, string? email, string? normalizedEmail, bool emailConfirmed, string passwordHash, string securityStamp, string concurrencyStamp, string phoneNumber, bool phoneNumberConfirmed, bool twoFactorEnabled, DateTime? lockOutEndDate, bool lockOutEnabled, int accessFailedCount)
+    {
+        string lockOutEndDateString = lockOutEndDate.HasValue ? $"\'{lockOutEndDate.Value}\'" : "null";
+        string emailString = !string.IsNullOrEmpty(email) ? $"\'{email}\'" : "null";
+        string normalizedEmailString = !string.IsNullOrEmpty(normalizedEmail) ? $"\'{normalizedEmail}\'" : "null";
+        using var connection = new NpgsqlConnection(auth_connectionString);
+        connection.Open();
+        using var command = new NpgsqlCommand($"select insert_AspNetUser('{id}','{firstName}','{lastName}','{username}','{normalizedUsername}',{emailString},{normalizedEmailString},{emailConfirmed},'{passwordHash}','{securityStamp}','{concurrencyStamp}','{phoneNumber}',{phoneNumberConfirmed},{twoFactorEnabled},{lockOutEndDateString},{lockOutEnabled},{accessFailedCount})", connection);
+        command.CommandType = System.Data.CommandType.Text;
+        command.ExecuteNonQuery();
     }
     void InsertIntoSellInvoiceInventoryItemRM(Guid id, Guid sellInvoiceId, Guid inventoryItemId, string inventoryItemCode, float count, long buyPrice, long sellPrice)
     {
@@ -254,6 +311,7 @@ class Program
         Console.WriteLine("start");
 
         readSeader.ClearReadDb();
+        readSeader.ClearAuthDb();
         readSeader.Seed();
         Console.WriteLine("end");
     }
