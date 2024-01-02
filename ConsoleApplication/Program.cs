@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Npgsql;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Xml.Linq;
 class DummyUser
 {
@@ -52,6 +53,47 @@ class OctaReadDbSeeder
     string read_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa-api_query";
     string write_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa-api";
     string auth_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa_auth";
+    public void PrepareAuth()
+    {
+        string scriptFolderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "scripts/auth_db");
+        string[] scriptFiles = Directory.GetFiles(scriptFolderPath, "*.sql");
+        //string[] scriptFiles = Directory.GetFiles("scripts/auth_db", "*.sql");
+        foreach (var item in scriptFiles)
+        {
+            string script = File.ReadAllText(item, Encoding.UTF8);
+            using var connection = new NpgsqlConnection(auth_connectionString);
+            connection.Open();
+            using var command = new NpgsqlCommand(script, connection);
+            command.ExecuteNonQuery();
+
+        }
+    }
+    public void PrepareRead()
+    {
+        string[] scriptFiles = Directory.GetFiles("scripts/read_db", "*.sql");
+        foreach (var item in scriptFiles)
+        {
+            string script = File.ReadAllText(item, Encoding.UTF8);
+            using var connection = new NpgsqlConnection(read_connectionString);
+            connection.Open();
+            using var command = new NpgsqlCommand(script, connection);
+            command.ExecuteNonQuery();
+
+        }
+    }
+    public void PrepareWrite()
+    {
+        string[] scriptFiles = Directory.GetFiles("scripts/write_db", "*.sql");
+        foreach (var item in scriptFiles)
+        {
+            string script = File.ReadAllText(item, Encoding.UTF8);
+            using var connection = new NpgsqlConnection(write_connectionString);
+            connection.Open();
+            using var command = new NpgsqlCommand(script, connection);
+            command.ExecuteNonQuery();
+
+        }
+    }
     public void ClearAuthDb()
     {
         using var connection = new NpgsqlConnection(auth_connectionString);
@@ -309,7 +351,9 @@ class Program
     {
         var readSeader = new OctaReadDbSeeder();
         Console.WriteLine("start");
-
+        readSeader.PrepareAuth();
+        readSeader.PrepareRead();
+        readSeader.PrepareWrite();
         readSeader.ClearReadDb();
         readSeader.ClearAuthDb();
         readSeader.Seed();
