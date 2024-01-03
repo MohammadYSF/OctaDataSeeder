@@ -8,5 +8,4 @@ BEGIN
 END;
 $$;
 
-alter function insert_service(uuid, text, integer, bigint, text) owner to octauser;
 

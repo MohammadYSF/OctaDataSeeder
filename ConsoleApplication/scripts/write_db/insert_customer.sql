@@ -8,5 +8,4 @@ BEGIN
 END;
 $$;
 
-alter function insert_customer(uuid, integer, varchar, varchar, varchar, text) owner to octauser;
 

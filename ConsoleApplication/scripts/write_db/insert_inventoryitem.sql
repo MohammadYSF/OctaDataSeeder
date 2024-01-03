@@ -10,5 +10,4 @@ BEGIN
 END;
 $$;
 
-alter function insert_inventoryitem(uuid, text, text, integer, text, bigint, bigint, real, boolean, timestamp, real) owner to octauser;
 

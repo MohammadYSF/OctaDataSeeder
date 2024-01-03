@@ -8,5 +8,4 @@ BEGIN
 END;
 $$;
 
-alter function insert_vehicle(uuid, integer, varchar, varchar, text) owner to octauser;
 

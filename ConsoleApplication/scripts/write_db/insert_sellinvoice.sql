@@ -8,5 +8,4 @@ BEGIN
 END;
 $$;
 
-alter function insert_sellinvoice(uuid, timestamp, integer, uuid, uuid, boolean, bigint, text) owner to octauser;
 

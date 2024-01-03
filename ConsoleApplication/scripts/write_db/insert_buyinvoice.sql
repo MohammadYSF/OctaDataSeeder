@@ -8,5 +8,4 @@ BEGIN
 END;
 $$;
 
-alter function insert_buyinvoice(uuid, timestamp, integer, varchar) owner to octauser;
 

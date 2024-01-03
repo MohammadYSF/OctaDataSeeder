@@ -50,9 +50,12 @@ class OctaWriteDbSeeder
 
 class OctaReadDbSeeder
 {
-    string read_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa-api_query";
-    string write_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa-api";
-    string auth_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa_auth";
+    //string read_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa-api_query";
+    string read_connectionString = $"Server=87.248.156.174;Port=5432;Username=postgres;Password=bssmBSSM1234!@#$;Database=octa-api_query";
+    //string write_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa-api";
+    string write_connectionString = $"Server=87.248.156.174;Port=5432;Username=postgres;Password=bssmBSSM1234!@#$;Database=octa-api";
+    //string auth_connectionString = $"Server=localhost;Port=5432;Username=octauser;Password=octapass;Database=octa_auth";
+    string auth_connectionString = $"Server=87.248.156.174;Port=5432;Username=postgres;Password=bssmBSSM1234!@#$;Database=octa_auth";
     public void PrepareAuth()
     {
         string scriptFolderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "scripts/auth_db");
@@ -96,6 +99,9 @@ class OctaReadDbSeeder
     }
     public void ClearAuthDb()
     {
+        try
+        {
+
         using var connection = new NpgsqlConnection(auth_connectionString);
         connection.Open();
 
@@ -103,16 +109,31 @@ class OctaReadDbSeeder
         command.CommandType = System.Data.CommandType.Text;
         // Execute the function
         command.ExecuteNonQuery();
+
+        }
+        catch (Exception)
+        {
+
+        }
     }
     public void ClearReadDb()
     {
-        using var connection = new NpgsqlConnection(read_connectionString);
-        connection.Open();
+        try
+        {
 
-        using var command = new NpgsqlCommand("select clear_read_db()", connection);
-        command.CommandType = System.Data.CommandType.Text;
-        // Execute the function
-        command.ExecuteNonQuery();
+
+            using var connection = new NpgsqlConnection(read_connectionString);
+            connection.Open();
+
+            using var command = new NpgsqlCommand("select clear_read_db()", connection);
+            command.CommandType = System.Data.CommandType.Text;
+            // Execute the function
+            command.ExecuteNonQuery();
+        }
+        catch (Exception)
+        {
+
+        }
     }
 
     public void Seed()

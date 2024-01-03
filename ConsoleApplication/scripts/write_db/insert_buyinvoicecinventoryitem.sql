@@ -8,5 +8,4 @@ BEGIN
 END;
 $$;
 
-alter function insert_buyinvoicecinventoryitem(uuid, uuid, uuid, real, uuid) owner to octauser;
 
